@@ -1044,6 +1044,22 @@ class IssuesMixin(
                             self._add_assignee_to_fields(update_fields, account_id)
                         except ValueError as e:
                             logger.warning(f"Could not update assignee: {str(e)}")
+                elif key == "components":
+                    # Handle components updates
+                    if value is None or value == []:
+                        update_fields["components"] = []
+                    elif isinstance(value, list):
+                        valid_components = [
+                            comp_name.strip()
+                            for comp_name in value
+                            if isinstance(comp_name, str) and comp_name.strip()
+                        ]
+                        if valid_components:
+                            update_fields["components"] = [
+                                {"name": comp_name} for comp_name in valid_components
+                            ]
+                    else:
+                        logger.warning(f"Invalid components value: {value}")
                 elif key == "description":
                     # Handle description with markdown conversion
                     update_fields["description"] = self._markdown_to_jira(value)
