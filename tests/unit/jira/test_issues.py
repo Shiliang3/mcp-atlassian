@@ -714,6 +714,59 @@ class TestIssuesMixin:
         assert not issues_mixin._get_account_id.called
         assert document.key == "TEST-123"
 
+    def test_update_issue_with_components(self, issues_mixin: IssuesMixin):
+        """Test updating an issue with components."""
+        issue_data = {
+            "id": "12345",
+            "key": "TEST-123",
+            "fields": {
+                "summary": "Test Issue",
+                "description": "This is a test",
+                "status": {"name": "Open"},
+                "issuetype": {"name": "Bug"},
+                "components": [{"name": "Frontend"}, {"name": "API"}],
+            },
+        }
+        issues_mixin.jira.get_issue.return_value = issue_data
+        issues_mixin.jira.issue_get_comments.return_value = {"comments": []}
+
+        document = issues_mixin.update_issue(
+            issue_key="TEST-123", components=["Frontend", "API"]
+        )
+
+        issues_mixin.jira.update_issue.assert_called_once_with(
+            issue_key="TEST-123",
+            update={
+                "fields": {
+                    "components": [{"name": "Frontend"}, {"name": "API"}]
+                }
+            },
+        )
+        assert document.key == "TEST-123"
+
+    def test_update_issue_clear_components(self, issues_mixin: IssuesMixin):
+        """Test clearing components from an issue."""
+        issue_data = {
+            "id": "12345",
+            "key": "TEST-123",
+            "fields": {
+                "summary": "Test Issue",
+                "description": "This is a test",
+                "status": {"name": "Open"},
+                "issuetype": {"name": "Bug"},
+                "components": [],
+            },
+        }
+        issues_mixin.jira.get_issue.return_value = issue_data
+        issues_mixin.jira.issue_get_comments.return_value = {"comments": []}
+
+        document = issues_mixin.update_issue(issue_key="TEST-123", components=[])
+
+        issues_mixin.jira.update_issue.assert_called_once_with(
+            issue_key="TEST-123", update={"fields": {"components": []}}
+        )
+        assert document.key == "TEST-123"
+
     def test_delete_issue(self, issues_mixin: IssuesMixin):
         """Test deleting an issue."""
         # Call the method
